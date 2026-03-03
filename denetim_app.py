@@ -2,99 +2,94 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 
-st.set_page_config(page_title="Polwis Software | Pre-Audit Assistant", page_icon="📊", layout="wide")
+st.set_page_config(page_title="Polwis | Financial Audit", page_icon="📈", layout="wide")
 
+# Kurumsal Tema Uygulaması
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
-    html, body, [class*="css"] { font-family: 'IBM Plex Sans', sans-serif; }
-    .stApp { background-color: #F8F9FA; }
-    h1 { color: #1A3755; font-weight: 600; }
-    div[data-testid="stMetric"] { background-color: #FFFFFF; border-radius: 8px; padding: 15px; border: 1px solid #E9ECEF; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    .stApp { background-color: #F4F7F9; }
+    
+    /* Üst Bar Tasarımı */
+    .main-header {
+        background-color: #1A3755;
+        padding: 20px;
+        border-radius: 10px;
+        color: white;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+    
+    /* Metrik Kartları */
+    div[data-testid="stMetric"] {
+        background-color: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        border: 1px solid #E1E4E8;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🛡️ Dijital Pre-Audit & İç Kontrol Asistanı")
-st.markdown("Mizanınızı göndermeden önce check-up'tan geçirin.")
-
-st.sidebar.header("Denetim Ayarları")
+st.markdown("<div class='main-header'><h1>Pre-Audit & Internal Control Dashboard</h1><p>Financial Integrity & Risk Analysis Tool</p></div>", unsafe_allow_html=True)
+st.sidebar.header("📊 Kontrol Paneli")
 kdv_oranlari = st.sidebar.multiselect("KDV Oranları", options=[0.01, 0.10, 0.20], default=[0.20])
-tahsilat_esigi = st.sidebar.slider("Şüpheli Alacak Eşiği (%)", 10, 90, 40) / 100.0
-uploaded_file = st.sidebar.file_uploader("Mizan Yükle", type=["xlsx", "xls"])
+tahsilat_esigi = st.sidebar.slider("Risk Eşiği (%)", 10, 90, 40) / 100.0
+uploaded_file = st.sidebar.file_uploader("Mizan Dosyası (Excel)", type=["xlsx", "xls"])
 
-def create_donut_chart(df, cat_col, val_col, title, colors):
-    chart = alt.Chart(df).mark_arc(innerRadius=80).encode(
+def create_pro_chart(df, cat_col, val_col, title, color_scheme):
+    chart = alt.Chart(df).mark_arc(innerRadius=70, cornerRadius=10).encode(
         theta=alt.Theta(val_col, stack=True),
-        color=alt.Color(cat_col, scale=alt.Scale(range=colors)),
+        color=alt.Color(cat_col, scale=alt.Scale(range=color_scheme), legend=alt.Legend(orient="bottom")),
         tooltip=[cat_col, val_col]
-    ).properties(title=title, width=300, height=300)
+    ).properties(title=title, width=250, height=350).configure_title(fontSize=18, anchor='middle', color='#1A3755')
     return chart
-
-if uploaded_file is not None:
+    if uploaded_file is not None:
     try:
         df = pd.read_excel(uploaded_file)
         df['Hesap Kodu'] = df['Hesap Kodu'].astype(str)
-        
         satis, kdv391, alici120, aktif, pasif = 0.0, 0.0, 0.0, 0.0, 0.0
-        kasa100, ortak131, kredi, faiz780, stok153, smm620 = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-        donen, duran, kvy, uvy, ozk = 0.0, 0.0, 0.0, 0.0, 0.0
+        kasa100, ortak131, kredi, faiz780, ozk = 0.0, 0.0, 0.0, 0.0, 0.0
+        donen, duran, kvy, uvy = 0.0, 0.0, 0.0, 0.0
         ters = []
 
         for i, row in df.iterrows():
             kod, b, a = row['Hesap Kodu'], row.get('Borç Bakiye', 0), row.get('Alacak Bakiye', 0)
             bak = b - a
-            if kod.startswith('1'): 
-                donen += bak
-                aktif += bak if bak > 0 else 0
-            elif kod.startswith('2'): 
-                duran += bak
-                aktif += bak if bak > 0 else 0
-            elif kod.startswith('3'): 
-                kvy += -bak
-                pasif += -bak if -bak > 0 else 0
-            elif kod.startswith('4'): 
-                uvy += -bak
-                pasif += -bak if -bak > 0 else 0
-            elif kod.startswith('5'): 
-                ozk += -bak
-                pasif += -bak if -bak > 0 else 0
-            
-            if kod.startswith(('1','2')) and bak < 0 and not kod.startswith(('103','257','268')):
-                ters.append(f"{kod} Ters Bakiye")
-            
+            if kod.startswith('1'): donen += bak; aktif += bak if bak > 0 else 0
+            elif kod.startswith('2'): duran += bak; aktif += bak if bak > 0 else 0
+            elif kod.startswith('3'): kvy += -bak; pasif += -bak if -bak > 0 else 0
+            elif kod.startswith('4'): uvy += -bak; pasif += -bak if -bak > 0 else 0
+            elif kod.startswith('5'): ozk += -bak; pasif += -bak if -bak > 0 else 0
+            if kod.startswith(('1','2')) and bak < 0 and not kod.startswith(('103','257')): ters.append(kod)
             if kod.startswith('600'): satis += a
-            elif kod.startswith('391'): kdv391 += a
-            elif kod.startswith('120'): alici120 += bak
-            elif kod == '100': kasa100 += bak
-            elif kod == '131': ortak131 += bak
-            elif kod.startswith('300'): kredi += a
-            elif kod == '780': faiz780 += b
-            elif kod == '153': stok153 += bak
-            elif kod == '620': smm620 += b
+            if kod.startswith('391'): kdv391 += a
+            if kod == '100': kasa100 += bak
+            if kod == '131': ortak131 += bak
+            if kod.startswith('300'): kredi += a
+            if kod == '780': faiz780 += b
 
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Satışlar", f"{satis:,.0f}")
-        c2.metric("Aktif", f"{aktif:,.0f}")
-        c3.metric("Krediler", f"{kredi:,.0f}")
-        c4.metric("Özkaynak", f"{ozk:,.0f}")
-        
+        # Metrikler
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Toplam Ciro", f"{satis:,.0f} ₺")
+        m2.metric("Aktif Büyüklük", f"{aktif:,.0f} ₺")
+        m3.metric("Finansal Borçlar", f"{kredi:,.0f} ₺")
+        m4.metric("Özkaynaklar", f"{ozk:,.0f} ₺")
+
+        # Grafikler
         st.markdown("---")
         g1, g2 = st.columns(2)
         with g1:
-            st.altair_chart(create_donut_chart(pd.DataFrame({'K':['Dönen','Duran'],'T':[donen,duran]}),'K','T','Aktif Yapı Dağılımı',['#1E6091','#F58518']), use_container_width=True)
+            st.altair_chart(create_pro_chart(pd.DataFrame({'K':['Dönen','Duran'],'T':[donen,duran]}),'K','T','Varlık Dağılımı',['#1A3755','#5D737E']), use_container_width=True)
         with g2:
-            st.altair_chart(create_donut_chart(pd.DataFrame({'K':['KV Yük.','UV Yük.','Özkaynak'],'T':[kvy,uvy,ozk]}),'K','T','Kaynak Yapı Dağılımı',['#F28E2B','#E15759','#1E6091']), use_container_width=True)
+            st.altair_chart(create_pro_chart(pd.DataFrame({'K':['KV','UV','Özk'],'T':[kvy,uvy,ozk]}),'K','T','Kaynak Yapısı',['#2C5F2D','#97BC62','#1A3755']), use_container_width=True)
 
-        st.subheader("🚩 Bulgular")
-        if satis > 0:
-            ef_kdv = kdv391/satis
-            if not (min(kdv_oranlari) <= ef_kdv <= max(kdv_oranlari)):
-                st.error(f"🚨 KDV Uyumsuzluğu: Efektif oran %{ef_kdv*100:.1f}")
-        for t in ters: st.error(f"🚨 {t}")
-        if aktif > 0 and (kasa100+ortak131)/aktif > 0.1: st.error("🚨 Yüksek Kasa/Ortak Bakiyesi Riskli")
-        if kredi > 0 and faiz780 < kredi*0.01: st.error("🚨 Kredilere Rağmen Eksik Faiz Tahakkuku")
-        
-    except Exception as e:
-        st.error(f"Hata oluştu: {e}")
-else:
-    st.info("Analiz için lütfen mizan dosyanızı yükleyin.")
+        st.subheader("📝 Denetim Notları & Bulgular")
+        if satis > 0 and not (min(kdv_oranlari) <= (kdv391/satis) <= max(kdv_oranlari)):
+            st.error(f"KDV Analizi: Efektif oran (%{(kdv391/satis)*100:.1f}) sektörel ortalamadan sapma gösteriyor.")
+        if ters: st.warning(f"Ters Bakiye: {', '.join(ters)} hesapları aktif karakterli olmasına rağmen alacak bakiyesi vermektedir.")
+        if aktif > 0 and (kasa100+ortak131)/aktif > 0.1: st.error("Likidite Riski: Kasa ve Ortaklar hesabındaki yoğunlaşma adatlandırma riski taşımaktadır.")
+
+    except Exception as e: st.error(f"Veri Okuma Hatası: {e}")
+else: st.info("Lütfen sol menüden kurumsal mizan dosyanızı (Excel) yükleyiniz.")
