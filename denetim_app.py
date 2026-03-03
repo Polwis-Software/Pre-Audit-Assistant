@@ -3,39 +3,63 @@ import pandas as pd
 import altair as alt
 
 # --- KURUMSAL SAYFA AYARLARI ---
-st.set_page_config(page_title="Polwis | Financial Audit Terminal", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Polwis | Audit Terminal Dark", page_icon="📊", layout="wide")
 
-# --- PROFESYONEL FİNANSAL TEMA (CSS) ---
+# --- KOYU TEMA VE OKUNABİLİRLİK (CSS) ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-    .stApp { background-color: #F4F7F9; }
     
-    /* Kurumsal Header */
+    /* Arka Planı Koyu Yap */
+    .stApp {
+        background-color: #0E1117;
+        color: #FFFFFF;
+    }
+    
+    /* Header Tasarımı */
     .main-header {
-        background: linear-gradient(90deg, #1A3755 0%, #2E5077 100%);
+        background: #1E232E;
         padding: 30px;
         border-radius: 12px;
-        color: white;
-        text-align: left;
+        border: 1px solid #30363D;
         margin-bottom: 30px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
     
-    /* Metrik Kartları */
+    /* Metrik Kartları (Koyu Gri Üstüne Beyaz Yazı) */
     div[data-testid="stMetric"] {
-        background-color: white;
+        background-color: #161B22 !important;
         border-radius: 10px;
         padding: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        border-left: 5px solid #1A3755;
+        border: 1px solid #30363D;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
     
+    /* Metrik Etiketlerini Beyaz Yap */
+    [data-testid="stMetricLabel"] {
+        color: #8B949E !important;
+        font-weight: 600;
+    }
+    
+    /* Metrik Değerlerini Beyaz Yap */
+    [data-testid="stMetricValue"] {
+        color: #58A6FF !important;
+    }
+
     /* Sidebar Düzeni */
     section[data-testid="stSidebar"] {
-        background-color: #FFFFFF !important;
-        border-right: 1px solid #E1E4E8;
+        background-color: #0E1117 !important;
+        border-right: 1px solid #30363D;
+    }
+    
+    /* Yazı Renklerini Sabitle */
+    h1, h2, h3, p, span {
+        color: #F0F6FC !important;
+    }
+
+    /* Tablo ve Dataframe Okunabilirliği */
+    .stDataFrame {
+        background-color: #161B22;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -43,25 +67,25 @@ st.markdown("""
 # --- HEADER ---
 st.markdown("""
 <div class='main-header'>
-    <h1 style='margin:0; font-size: 28px;'>Polwis Financial Audit Terminal</h1>
-    <p style='margin:0; opacity: 0.8;'>Professional Pre-Audit & Internal Control Analytics</p>
+    <h1 style='margin:0; font-size: 28px; color: #58A6FF !important;'>Polwis Audit Terminal</h1>
+    <p style='margin:0; color: #8B949E !important;'>Internal Control & Risk Surveillance Platform</p>
 </div>
 """, unsafe_allow_html=True)
 
-# --- SIDEBAR (KONTROL PANELİ) ---
-st.sidebar.markdown("### ⚙️ Audit Configuration")
-kdv_oranlari = st.sidebar.multiselect("VAT Rates (KDV)", options=[0.01, 0.10, 0.20], default=[0.20])
-tahsilat_esigi = st.sidebar.slider("Receivables Risk Threshold (%)", 10, 90, 40) / 100.0
+# --- SIDEBAR ---
+st.sidebar.markdown("### ⚙️ Terminal Settings")
+kdv_oranlari = st.sidebar.multiselect("VAT Thresholds", options=[0.01, 0.10, 0.20], default=[0.20])
+tahsilat_esigi = st.sidebar.slider("Risk Tolerance (%)", 10, 90, 40) / 100.0
 st.sidebar.markdown("---")
-uploaded_file = st.sidebar.file_uploader("Upload Trial Balance (Mizan)", type=["xlsx", "xls"])
+uploaded_file = st.sidebar.file_uploader("Secure Data Upload (Excel)", type=["xlsx", "xls"])
 
 # --- CHART FONKSİYONU ---
-def create_pro_chart(df, cat_col, val_col, title, color_scheme):
-    chart = alt.Chart(df).mark_arc(innerRadius=75, cornerRadius=8).encode(
+def create_dark_chart(df, cat_col, val_col, title, colors):
+    chart = alt.Chart(df).mark_arc(innerRadius=80, cornerRadius=10).encode(
         theta=alt.Theta(val_col, stack=True),
-        color=alt.Color(cat_col, scale=alt.Scale(range=color_scheme), legend=alt.Legend(orient="bottom", title=None)),
+        color=alt.Color(cat_col, scale=alt.Scale(range=colors), legend=alt.Legend(orient="bottom", labelColor="#C9D1D9")),
         tooltip=[cat_col, alt.Tooltip(val_col, format=",d")]
-    ).properties(title=title, width=280, height=350).configure_title(fontSize=16, color='#1A3755', anchor='start')
+    ).properties(title=title, width=280, height=350).configure_title(fontSize=16, color='#58A6FF', anchor='middle').configure_view(strokeWidth=0)
     return chart
 
 # --- DENETİM MOTORU ---
@@ -70,7 +94,6 @@ if uploaded_file is not None:
         df = pd.read_excel(uploaded_file)
         df['Hesap Kodu'] = df['Hesap Kodu'].astype(str)
         
-        # Init Variables
         satis, kdv391, alici120, aktif, pasif = 0.0, 0.0, 0.0, 0.0, 0.0
         kasa100, ortak131, kredi, faiz780, ozk = 0.0, 0.0, 0.0, 0.0, 0.0
         donen, duran, kvy, uvy = 0.0, 0.0, 0.0, 0.0
@@ -105,39 +128,33 @@ if uploaded_file is not None:
             if kod.startswith('300'): kredi += a
             if kod == '780': faiz780 += b
 
-        # Key Financial Metrics
+        # Metrik Kartları
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Gross Revenue", f"₺ {satis:,.0f}")
-        m2.metric("Total Assets", f"₺ {aktif:,.0f}")
+        m2.metric("Asset Volume", f"₺ {aktif:,.0f}")
         m3.metric("Financial Debt", f"₺ {kredi:,.0f}")
         m4.metric("Total Equity", f"₺ {ozk:,.0f}")
 
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Visual Analytics
+        # Grafikler
         g1, g2 = st.columns(2)
         with g1:
-            asset_df = pd.DataFrame({'Category':['Current Assets','Non-Current'], 'Value':[donen, duran]})
-            st.altair_chart(create_pro_chart(asset_df, 'Category', 'Value', 'Asset Structure', ['#1A3755','#5D737E']), use_container_width=True)
+            st.altair_chart(create_dark_chart(pd.DataFrame({'C':['Current','Non-Current'], 'V':[donen, duran]}), 'C', 'V', 'Asset Balance', ['#58A6FF','#1F6FEB']), use_container_width=True)
         with g2:
-            source_df = pd.DataFrame({'Category':['ST Liabilities','LT Liabilities','Equity'], 'Value':[kvy, uvy, ozk]})
-            st.altair_chart(create_pro_chart(source_df, 'Category', 'Value', 'Capital Structure', ['#2C5F2D','#97BC62','#1A3755']), use_container_width=True)
+            st.altair_chart(create_dark_chart(pd.DataFrame({'C':['KV','UV','Equity'], 'V':[kvy, uvy, ozk]}), 'C', 'V', 'Source Balance', ['#238636','#2EA043','#58A6FF']), use_container_width=True)
 
-        # Audit Findings
-        st.subheader("📑 Audit Memorandum & Observations")
-        
+        st.subheader("📝 Audit Notes")
         if satis > 0:
             ef_kdv = kdv391/satis
             if not (min(kdv_oranlari) <= ef_kdv <= max(kdv_oranlari)):
-                st.error(f"VAT Compliance: Effective rate (%{ef_kdv*100:.1f}) is outside expected thresholds. Risk of unrecorded revenue.")
-        
+                st.error(f"VAT Alert: Effective rate is %{ef_kdv*100:.1f}. Check for unrecorded sales.")
         if ters:
-            st.warning(f"Classification Error: Accounts {', '.join(ters)} show credit balances. Immediate reclassification required.")
-            
+            st.warning(f"Classification Warning: Accounts {', '.join(ters)} show irregular balances.")
         if aktif > 0 and (kasa100+ortak131)/aktif > 0.1:
-            st.error("Liquidity & Related Party Risk: High concentration in Cash/Shareholder accounts detected.")
+            st.error("High Concentration Risk: Large balances in Related Party/Cash accounts.")
 
     except Exception as e:
-        st.error(f"System Error: {e}")
+        st.error(f"Kernel Error: {e}")
 else:
-    st.info("System Ready. Please upload a corporate trial balance to begin analysis.")
+    st.info("System Online. Waiting for encrypted trial balance data...")
