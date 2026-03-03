@@ -43,7 +43,14 @@ def create_pdf(satis, aktif, kredi, ozk, bulgular):
     return pdf.output(dest='S').encode('latin-1')
 
 # --- HEADER ---
-st.markdown("<div class='main-header'><h1 style='margin:0; font-size: 26px; color: #58A6FF !important;'>Polwis Audit Terminal</h1><p style='margin:0; color: #8B949E !important;'>Internal Control & Compliance Analytics</p></div>", unsafe_allow_html=True)
+st.markdown("""
+<div class='main-header'>
+    <h1 style='margin:0; font-size: 26px; color: #58A6FF !important;'>Prefin</h1>
+    <p style='margin:0; color: #8B949E !important; font-size: 18px;'>
+        Fast and easy Internal Control & Compliance tool powered with Artificial Intelligence
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # --- SIDEBAR ---
 st.sidebar.markdown("### ⚙️ Settings")
