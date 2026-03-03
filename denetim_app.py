@@ -81,14 +81,12 @@ if uploaded_file is not None:
         cols[3].metric("Equity", f"₺{ozk:,.0f}")
 
         # Bulguları Topla
-        if satis > 0:
+        if satis > 0 and len(kdv_oran) > 0: # Liste boş değilse kontrol et
             ef = kdv391/satis
-            if not (min(kdv_oran) <= ef <= max(kdv_oran)): bulgular_listesi.append(f"VAT Mismatch: Effective rate is %{ef*100:.1f}")
-        if (kasa100+ortak131)/aktif > 0.1: bulgular_listesi.append("High Related Party/Cash Concentration Risk")
-        
-        st.markdown("---")
-        st.subheader("📝 Findings")
-        for b in bulgular_listesi: st.warning(b)
+            if not (min(kdv_oran) <= ef <= max(kdv_oran)): 
+                bulgular_listesi.append(f"VAT Mismatch: Effective rate is %{ef*100:.1f}")
+        elif satis > 0:
+            bulgular_listesi.append("VAT Analysis skipped: Please select at least one VAT rate.")
 
         # PDF BUTONU
         pdf_data = create_pdf(satis, aktif, kredi, ozk, bulgular_listesi)
