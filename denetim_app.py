@@ -45,9 +45,9 @@ def create_pdf(satis, aktif, kredi, ozk, bulgular):
 # --- HEADER ---
 st.markdown("""
 <div class='main-header'>
-    <h1 style='margin:0; font-size: 26px; color: #58A6FF !important;'>Prefin</h1>
+    <h1 style='margin:0; font-size: 26px; color: #58A6FF !important;'>PreFin</h1>
     <p style='margin:0; color: #8B949E !important; font-size: 18px;'>
-        Fast and easy Internal Control & Compliance tool powered with Artificial Intelligence
+        Fast and Easy Internal Control & Compliance Tool powered with Artificial Intelligence
     </p>
 </div>
 """, unsafe_allow_html=True)
